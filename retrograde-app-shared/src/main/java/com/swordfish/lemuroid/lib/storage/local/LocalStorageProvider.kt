@@ -34,6 +34,9 @@ import com.swordfish.lemuroid.lib.storage.DirectoriesManager
 import com.swordfish.lemuroid.lib.storage.RomFiles
 import com.swordfish.lemuroid.lib.storage.StorageFile
 import com.swordfish.lemuroid.lib.storage.StorageProvider
+import com.swordfish.lemuroid.lib.storage.patch.IpsPatcher
+import com.swordfish.lemuroid.lib.storage.patch.isPatchFile
+import com.swordfish.lemuroid.lib.storage.patch.patchBaseNameAndOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.File
@@ -113,12 +116,35 @@ class LocalStorageProvider(
         return cacheFile
     }
 
+    private fun getPatchedGameRom(
+        game: Game,
+        gameRom: File,
+        patchFiles: List<DataFile>,
+    ): File {
+        val patchedBytes =
+            patchFiles.fold(gameRom.readBytes()) { romBytes, patchFile ->
+                IpsPatcher.apply(romBytes, getDataFile(patchFile).readBytes())
+            }
+
+        val patchedFile = GameCacheUtils.getCacheFileForGame(GameCacheUtils.PATCHED_ROM_CACHE_SUBFOLDER, context, game)
+        patchedFile.writeBytes(patchedBytes)
+        return patchedFile
+    }
+
     override fun getGameRomFiles(
         game: Game,
         dataFiles: List<DataFile>,
         allowVirtualFiles: Boolean,
     ): RomFiles {
-        return RomFiles.Standard(listOf(getGameRom(game)) + dataFiles.map { getDataFile(it) })
+        val (unorderedPatchFiles, regularDataFiles) = dataFiles.partition { isPatchFile(it.fileName) }
+        val patchFiles = unorderedPatchFiles.sortedBy { patchBaseNameAndOrder(it.fileName).second }
+        val gameRom = getGameRom(game)
+        val finalRom = if (patchFiles.isNotEmpty()) getPatchedGameRom(game, gameRom, patchFiles) else gameRom
+
+        return RomFiles.Standard(
+            listOf(finalRom) + regularDataFiles.map { getDataFile(it) },
+            appliedPatches = patchFiles.map { it.fileName },
+        )
     }
 
     override fun getInputStream(uri: Uri): InputStream {

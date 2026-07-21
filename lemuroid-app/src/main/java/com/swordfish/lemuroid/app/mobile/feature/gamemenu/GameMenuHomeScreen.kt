@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.alorma.compose.settings.storage.memory.rememberMemoryBooleanSettingState
@@ -95,17 +98,39 @@ fun GameMenuHomeScreen(
         )
 
         if (gameMenuRequest.fastForwardSupported) {
-            LemuroidSettingsSwitch(
+            val speedLabels = stringArrayResource(R.array.game_menu_fast_forward_speeds).toList()
+            val speedValues =
+                stringArrayResource(R.array.game_menu_fast_forward_speed_values)
+                    .map { it.toInt() }
+
+            val selectedIndex =
+                speedValues.indexOf(gameMenuRequest.frameSpeed).let { if (it >= 0) it else 0 }
+
+            LemuroidSettingsList(
                 title = { Text(text = stringResource(id = R.string.game_menu_fast_forward)) },
+                items = speedLabels,
+                useSelectedValueAsSubtitle = false,
+                subtitle = {
+                    Text(
+                        text =
+                            speedLabels[selectedIndex] +
+                                " - " +
+                                stringResource(R.string.game_menu_fast_forward_note),
+                    )
+                },
                 icon = {
                     Icon(
                         painterResource(R.drawable.ic_menu_fast_forward),
                         contentDescription = stringResource(id = R.string.game_menu_fast_forward),
                     )
                 },
-                state = rememberMemoryBooleanSettingState(gameMenuRequest.fastForwardEnabled),
-                onCheckedChange = {
-                    onResult { putExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD, it) }
+                state = rememberMemoryIntSettingState(selectedIndex),
+                onItemSelected = { index, _ ->
+                    val speed = speedValues[index]
+                    onResult {
+                        putExtra(GameMenuContract.RESULT_SET_FRAME_SPEED, speed)
+                        putExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD, speed > 1)
+                    }
                 },
             )
         }
@@ -141,6 +166,19 @@ fun GameMenuHomeScreen(
             },
         )
 
+        if (gameMenuRequest.cheatsSupported) {
+            LemuroidSettingsMenuLink(
+                title = { Text(text = stringResource(id = R.string.game_menu_cheats)) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Code,
+                        contentDescription = stringResource(id = R.string.game_menu_cheats),
+                    )
+                },
+                onClick = { navController.navigateToRoute(GameMenuRoute.CHEATS) },
+            )
+        }
+
         if (gameMenuRequest.advancedCoreOptions.isNotEmpty() || gameMenuRequest.coreOptions.isNotEmpty()) {
             LemuroidSettingsMenuLink(
                 title = { Text(text = stringResource(id = R.string.game_menu_settings)) },
@@ -153,6 +191,17 @@ fun GameMenuHomeScreen(
                 onClick = { navController.navigateToRoute(GameMenuRoute.OPTIONS) },
             )
         }
+
+        LemuroidSettingsMenuLink(
+            title = { Text(text = stringResource(id = R.string.game_menu_saves_manager)) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.FolderZip,
+                    contentDescription = stringResource(id = R.string.game_menu_saves_manager),
+                )
+            },
+            onClick = { navController.navigateToRoute(GameMenuRoute.SAVES_MANAGER) },
+        )
 
         if (gameMenuRequest.allTiltConfigurations.isNotEmpty()) {
             val tiltConfigurationEntries =

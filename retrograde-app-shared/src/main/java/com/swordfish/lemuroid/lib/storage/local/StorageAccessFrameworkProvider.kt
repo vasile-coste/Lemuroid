@@ -16,6 +16,9 @@ import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.RomFiles
 import com.swordfish.lemuroid.lib.storage.StorageFile
 import com.swordfish.lemuroid.lib.storage.StorageProvider
+import com.swordfish.lemuroid.lib.storage.patch.IpsPatcher
+import com.swordfish.lemuroid.lib.storage.patch.isPatchFile
+import com.swordfish.lemuroid.lib.storage.patch.patchBaseNameAndOrder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -130,10 +133,23 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
         dataFiles: List<DataFile>,
         allowVirtualFiles: Boolean,
     ): RomFiles {
+        val (unorderedPatchFiles, regularDataFiles) = dataFiles.partition { isPatchFile(it.fileName) }
+        val patchFiles = unorderedPatchFiles.sortedBy { patchBaseNameAndOrder(it.fileName).second }
+
         val originalDocumentUri = Uri.parse(game.fileUri)
         val originalDocument = DocumentFile.fromSingleUri(context, originalDocumentUri)!!
 
         val isZipped = originalDocument.isZipped() && originalDocument.name != game.fileName
+
+        if (patchFiles.isNotEmpty()) {
+            val gameRom =
+                if (isZipped) {
+                    getGameRomZipped(game, originalDocument)
+                } else {
+                    getGameRomStandard(game, originalDocument)
+                }
+            return getGameRomFilesPatched(game, gameRom, regularDataFiles, patchFiles)
+        }
 
         return when {
             isZipped && dataFiles.isEmpty() -> getGameRomFilesZipped(game, originalDocument)
@@ -152,13 +168,38 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
         return RomFiles.Standard(listOf(gameEntry) + dataEntries)
     }
 
-    private fun getGameRomFilesZipped(
+    private fun getGameRomFilesPatched(
+        game: Game,
+        gameRom: File,
+        regularDataFiles: List<DataFile>,
+        patchFiles: List<DataFile>,
+    ): RomFiles {
+        val patchedBytes =
+            patchFiles.fold(gameRom.readBytes()) { romBytes, patchFile ->
+                val patchBytes =
+                    context.contentResolver.openInputStream(Uri.parse(patchFile.fileUri))!!.use {
+                        it.readBytes()
+                    }
+                IpsPatcher.apply(romBytes, patchBytes)
+            }
+
+        val patchedFile = GameCacheUtils.getCacheFileForGame(GameCacheUtils.PATCHED_ROM_CACHE_SUBFOLDER, context, game)
+        patchedFile.writeBytes(patchedBytes)
+
+        val dataEntries = regularDataFiles.map { getDataFileStandard(game, it) }
+        return RomFiles.Standard(
+            listOf(patchedFile) + dataEntries,
+            appliedPatches = patchFiles.map { it.fileName },
+        )
+    }
+
+    private fun getGameRomZipped(
         game: Game,
         originalDocument: DocumentFile,
-    ): RomFiles {
+    ): File {
         val cacheFile = GameCacheUtils.getCacheFileForGame(SAF_CACHE_SUBFOLDER, context, game)
         if (cacheFile.exists()) {
-            return RomFiles.Standard(listOf(cacheFile))
+            return cacheFile
         }
 
         val stream =
@@ -166,7 +207,14 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
                 context.contentResolver.openInputStream(originalDocument.uri),
             )
         stream.extractEntryToFile(game.fileName, cacheFile)
-        return RomFiles.Standard(listOf(cacheFile))
+        return cacheFile
+    }
+
+    private fun getGameRomFilesZipped(
+        game: Game,
+        originalDocument: DocumentFile,
+    ): RomFiles {
+        return RomFiles.Standard(listOf(getGameRomZipped(game, originalDocument)))
     }
 
     private fun getGameRomFilesVirtual(

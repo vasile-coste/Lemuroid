@@ -39,4 +39,6 @@ object GameCacheUtils {
     private fun buildPath(vararg chunks: String): String {
         return chunks.joinToString(separator = File.separator)
     }
+
+    const val PATCHED_ROM_CACHE_SUBFOLDER = "patched-games"
 }

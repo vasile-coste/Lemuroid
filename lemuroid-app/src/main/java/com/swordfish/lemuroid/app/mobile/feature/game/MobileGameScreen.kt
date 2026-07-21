@@ -17,13 +17,16 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.RotateLeft
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,6 +60,7 @@ import com.swordfish.touchinput.controller.R
 import com.swordfish.touchinput.radial.LemuroidPadTheme
 import com.swordfish.touchinput.radial.LocalLemuroidPadTheme
 import com.swordfish.touchinput.radial.sensors.TiltConfiguration
+import com.swordfish.touchinput.radial.settings.TouchControllerID
 import com.swordfish.touchinput.radial.settings.TouchControllerSettingsManager
 import com.swordfish.touchinput.radial.ui.GlassSurface
 import com.swordfish.touchinput.radial.ui.LemuroidButtonPressFeedback
@@ -111,7 +115,7 @@ fun MobileGameScreen(viewModel: BaseGameScreenViewModel) {
 
         PadKit(
             modifier = Modifier.fillMaxSize(),
-            onInputEvents = { viewModel.handleVirtualInputEvent(it) },
+            onInputEvents = { viewModel.handleVirtualInputEvent(it, touchControllerSettings) },
             hapticFeedbackType = padHapticFeedback,
             simulatedState = tiltSimulatedStates,
             simulatedControlIds = tiltSimulatedControls,
@@ -319,6 +323,31 @@ private fun MenuEditTouchControls(
                                 )
                             },
                         )
+                    }
+                }
+                if (controllerConfig.touchControllerID in TouchControllerID.TURBO_SUPPORTED_CONTROLLERS) {
+                    MenuEditTouchControlRow(Icons.Default.FlashOn, "Turbo Buttons", 0f) {
+                        Switch(
+                            checked = touchControllerSettings.showTurboButtons,
+                            onCheckedChange = {
+                                viewModel.updateTouchControllerSettings(
+                                    touchControllerSettings.copy(showTurboButtons = it),
+                                )
+                            },
+                        )
+                    }
+                    if (touchControllerSettings.showTurboButtons) {
+                        MenuEditTouchControlRow(Icons.Default.Speed, "Turbo Speed", 0f) {
+                            Slider(
+                                value = touchControllerSettings.turboSpeed,
+                                steps = 1,
+                                onValueChange = {
+                                    viewModel.updateTouchControllerSettings(
+                                        touchControllerSettings.copy(turboSpeed = it),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
                 Row(

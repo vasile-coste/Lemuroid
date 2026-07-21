@@ -29,6 +29,8 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         val rotation: Float = DEFAULT_ROTATION,
         val marginX: Float = DEFAULT_MARGIN_X,
         val marginY: Float = DEFAULT_MARGIN_Y,
+        val showTurboButtons: Boolean = DEFAULT_SHOW_TURBO_BUTTONS,
+        val turboSpeed: Float = DEFAULT_TURBO_SPEED,
     )
 
     private fun computeInsetsPaddings(
@@ -123,12 +125,17 @@ class TouchControllerSettingsManager(private val sharedPreferences: SharedPrefer
         const val DEFAULT_ROTATION = 0.0f
         const val DEFAULT_MARGIN_X = 0.0f
         const val DEFAULT_MARGIN_Y = 0.0f
+        const val DEFAULT_SHOW_TURBO_BUTTONS = false
+        const val DEFAULT_TURBO_SPEED = 0.5f
 
         const val MAX_ROTATION = 45f
         const val MIN_SCALE = 0.75f
         const val MAX_SCALE = 1.5f
 
         const val MAX_MARGINS = 96f
+
+        const val TURBO_INTERVAL_SLOW_MILLIS = 100L
+        const val TURBO_INTERVAL_FAST_MILLIS = 30L
     }
 
     private fun getPreferenceString(

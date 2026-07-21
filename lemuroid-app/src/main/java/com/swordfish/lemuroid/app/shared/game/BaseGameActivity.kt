@@ -30,11 +30,15 @@ import com.swordfish.lemuroid.common.coroutines.launchOnState
 import com.swordfish.lemuroid.common.displayToast
 import com.swordfish.lemuroid.common.dump
 import com.swordfish.lemuroid.common.kotlin.serializable
+import com.swordfish.lemuroid.lib.cheats.CheatEntry
+import com.swordfish.lemuroid.lib.cheats.CheatsManager
 import com.swordfish.lemuroid.lib.core.CoreVariablesManager
 import com.swordfish.lemuroid.lib.game.GameLoader
+import com.swordfish.libretrodroid.LibretroDroid
 import com.swordfish.lemuroid.lib.library.ExposedSetting
 import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.SystemCoreConfig
+import com.swordfish.lemuroid.lib.library.SystemID
 import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.saves.SavesManager
 import com.swordfish.lemuroid.lib.saves.StatesManager
@@ -68,6 +72,9 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
     @Inject
     lateinit var coreVariablesManager: CoreVariablesManager
+
+    @Inject
+    lateinit var cheatsManager: CheatsManager
 
     @Inject
     lateinit var inputDeviceManager: InputDeviceManager
@@ -137,6 +144,16 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             )
         }
 
+        if (system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC) {
+            lifecycleScope.launch {
+                baseGameScreenViewModel.retroGameView.retroGameViewFlow()
+                val savedCheats = cheatsManager.loadGameCheats(game.id)
+                savedCheats.filter { it.enabled }.forEachIndexed { index, cheat ->
+                    baseGameScreenViewModel.retroGameView.retroGameView?.setCheat(index, true, cheat.code)
+                }
+            }
+        }
+
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -193,6 +210,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
 
         val intent =
             Intent(this, getDialogClass()).apply {
+                val currentFrameSpeed = baseGameScreenViewModel.retroGameView.retroGameView?.frameSpeed ?: 1
                 this.putExtra(GameMenuContract.EXTRA_CORE_OPTIONS, options.toTypedArray())
                 this.putExtra(GameMenuContract.EXTRA_ADVANCED_CORE_OPTIONS, advancedOptions.toTypedArray())
                 this.putExtra(
@@ -210,13 +228,21 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                     baseGameScreenViewModel.retroGameView.retroGameView?.audioEnabled,
                 )
                 this.putExtra(GameMenuContract.EXTRA_FAST_FORWARD_SUPPORTED, system.fastForwardSupport)
+                this.putExtra(GameMenuContract.EXTRA_FRAME_SPEED, currentFrameSpeed)
                 this.putExtra(
                     GameMenuContract.EXTRA_FAST_FORWARD,
-                    (baseGameScreenViewModel.retroGameView.retroGameView?.frameSpeed ?: 1) > 1,
+                    currentFrameSpeed > 1,
                 )
                 this.putExtra(GameMenuContract.EXTRA_CURRENT_TILT_CONFIG, currentTiltConfiguration)
                 // TODO PADS... Make sure to avoid passing this if a physical pad is connected.
                 this.putExtra(GameMenuContract.EXTRA_TILT_ALL_CONFIGS, tiltConfigurations.toTypedArray())
+                this.putExtra(GameMenuContract.EXTRA_CHEATS_SUPPORTED, system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC)
+                if (system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC) {
+                    this.putExtra(
+                        GameMenuContract.EXTRA_CHEATS,
+                        ArrayList(cheatsManager.loadGameCheats(game.id)),
+                    )
+                }
             }
         startActivityForResult(intent, DIALOG_REQUEST)
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
@@ -396,7 +422,18 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                         )
                 }
             }
-            if (data?.hasExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD) == true) {
+            val hasFrameSpeed = data?.hasExtra(GameMenuContract.RESULT_SET_FRAME_SPEED) == true
+            if (hasFrameSpeed) {
+                baseGameScreenViewModel.retroGameView.retroGameView?.apply {
+                    val frameSpeed =
+                        data.getIntExtra(
+                            GameMenuContract.RESULT_SET_FRAME_SPEED,
+                            1,
+                        )
+                    this.frameSpeed = frameSpeed
+                }
+            }
+            if (!hasFrameSpeed && data?.hasExtra(GameMenuContract.RESULT_ENABLE_FAST_FORWARD) == true) {
                 baseGameScreenViewModel.retroGameView.retroGameView?.apply {
                     val fastForwardEnabled =
                         data.getBooleanExtra(
@@ -413,6 +450,19 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 val tiltConfig = data.serializable<TiltConfiguration>(GameMenuContract.RESULT_CHANGE_TILT_CONFIG)
                 baseGameScreenViewModel.changeTiltConfiguration(tiltConfig!!)
             }
+            if (data?.hasExtra(GameMenuContract.RESULT_CHEATS) == true) {
+                val cheats = data.serializable<ArrayList<CheatEntry>>(GameMenuContract.RESULT_CHEATS) ?: arrayListOf()
+                cheatsManager.saveGameCheats(game.id, cheats)
+                applyCheatList(cheats)
+            }
+        }
+    }
+
+    private fun applyCheatList(cheats: List<CheatEntry>) {
+        val retroView = baseGameScreenViewModel.retroGameView.retroGameView ?: return
+        LibretroDroid.resetCheat()
+        cheats.filter { it.enabled }.forEachIndexed { index, cheat ->
+            retroView.setCheat(index, true, cheat.code, useEmulationThread = false)
         }
     }
 

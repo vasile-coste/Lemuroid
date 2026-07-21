@@ -123,8 +123,24 @@
     <string name="game_menu_edit_touch_controls">Edit Controls</string>
     <string name="game_menu_mute_audio">Mute</string>
     <string name="game_menu_fast_forward">Fast-Forward</string>
+    <string name="game_menu_fast_forward_note">Some speeds may be limited depending on the core.</string>
     <string name="game_menu_change_disk_disk">Disk %1$s</string>
     <string name="game_menu_tilt_sensor">Tilt Sensor</string>
+    <string name="game_menu_cheats">Cheats</string>
+    <string name="game_menu_cheats_code_hint">Code (e.g. D43C-6DAE)</string>
+    <string name="game_menu_cheats_desc_hint">Description (optional)</string>
+    <string name="game_menu_cheats_add">Add cheat</string>
+    <string name="game_menu_cheats_empty">No cheats added yet</string>
+    <string name="game_menu_saves_manager">Manage Saves</string>
+    <string name="game_menu_saves_export">Export saves (ZIP)</string>
+    <string name="game_menu_saves_import_srm">Import SRAM (.srm)</string>
+    <string name="game_menu_saves_import_state">Import Save State (.state)</string>
+    <string name="game_menu_saves_slot_select">Select target slot</string>
+    <string name="game_menu_saves_slot_auto">Auto-save</string>
+    <string name="game_menu_saves_slot_n">Slot %d</string>
+    <string name="game_menu_saves_success">Import successful</string>
+    <string name="game_menu_saves_error">Error: %s</string>
+    <string name="game_menu_saves_working">Working…</string>
 
     <string name="game_loading_preparing_game">Preparing game…</string>
 
@@ -132,6 +148,12 @@
     <string name="game_toast_load_state_failed">Cannot load this state</string>
     <string name="game_toast_quick_save_loaded">Quick loaded</string>
     <string name="game_toast_quick_save_saved">Quick saved</string>
+    <string name="game_toast_ips_patch_applied">IPS patch applied: %1$s</string>
+
+    <string name="shortcut_not_set">Not set</string>
+    <string name="settings_fast_forward_cycle_title">Fast-forward cycle</string>
+    <string name="settings_fast_forward_cycle_subtitle">Choose which speeds are used when toggling fast-forward.</string>
+    <string name="settings_fast_forward_cycle_confirm">Done</string>
 
     <string name="empty_view_default">No Items</string>
 

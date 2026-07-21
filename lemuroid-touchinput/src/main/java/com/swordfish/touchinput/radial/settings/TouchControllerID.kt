@@ -94,6 +94,8 @@ enum class TouchControllerID {
     )
 
     companion object {
+        val TURBO_SUPPORTED_CONTROLLERS = setOf(NES, GB, GBA)
+
         fun getConfig(id: TouchControllerID): Config {
             return when (id) {
                 GB ->

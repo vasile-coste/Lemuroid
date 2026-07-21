@@ -130,6 +130,7 @@ class GameViewModelRetroGameView(
                 gameState.value =
                     if (loadingState is GameLoader.LoadingState.Ready) {
                         Timber.i("Setting state to loaded")
+                        notifyAppliedPatches(loadingState.gameData.gameFiles)
                         val retroViewData =
                             buildRetroViewData(
                                 applicationContext,
@@ -199,6 +200,13 @@ class GameViewModelRetroGameView(
         retroView.getGLRetroEvents()
             .filterIsInstance<T>()
             .first()
+    }
+
+    private fun notifyAppliedPatches(gameFiles: RomFiles) {
+        if (gameFiles !is RomFiles.Standard || gameFiles.appliedPatches.isEmpty()) return
+
+        val patchNames = gameFiles.appliedPatches.joinToString(", ")
+        sideEffects.showToast(appContext.getString(R.string.game_toast_ips_patch_applied, patchNames))
     }
 
     private fun buildRetroViewData(

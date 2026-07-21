@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -51,6 +52,8 @@ class GameViewModelTouchControls(
     private val hapticFeedbackMode = MutableStateFlow(HapticFeedbackMode.NONE)
 
     private var loadingMenuJob: Job? = null
+    private var turboBJob: Job? = null
+    private var turboAJob: Job? = null
 
     override fun onCreate(owner: LifecycleOwner) {
         owner.launchOnState(Lifecycle.State.CREATED) {
@@ -117,7 +120,10 @@ class GameViewModelTouchControls(
             .distinctUntilChanged()
     }
 
-    fun handleVirtualInputEvent(events: List<InputEvent>) {
+    fun handleVirtualInputEvent(
+        events: List<InputEvent>,
+        settings: TouchControllerSettingsManager.Settings?,
+    ) {
         val menuEvent = events.firstOrNull { it is InputEvent.Button && it.id == KeyEvent.KEYCODE_BUTTON_MODE }
         if (menuEvent != null) {
             onMenuPressed((menuEvent as InputEvent.Button).pressed)
@@ -126,7 +132,7 @@ class GameViewModelTouchControls(
         events.forEach { event ->
             when (event) {
                 is InputEvent.Button -> {
-                    handleVirtualInputButton(event)
+                    handleVirtualInputButton(event, settings)
                 }
 
                 is InputEvent.DiscreteDirection -> {
@@ -168,9 +174,75 @@ class GameViewModelTouchControls(
         showEditControls.value = show
     }
 
-    private fun handleVirtualInputButton(event: InputEvent.Button) {
+    private fun handleVirtualInputButton(
+        event: InputEvent.Button,
+        settings: TouchControllerSettingsManager.Settings?,
+    ) {
+        val isTurboTrigger = touchControlId.value in TouchControllerID.TURBO_SUPPORTED_CONTROLLERS &&
+            (event.id == KeyEvent.KEYCODE_BUTTON_Y || event.id == KeyEvent.KEYCODE_BUTTON_Z)
+
+        if (isTurboTrigger) {
+            val targetKeyCode =
+                if (event.id == KeyEvent.KEYCODE_BUTTON_Y) {
+                    KeyEvent.KEYCODE_BUTTON_B
+                } else {
+                    KeyEvent.KEYCODE_BUTTON_A
+                }
+
+            val turboSpeed = settings?.turboSpeed ?: TouchControllerSettingsManager.DEFAULT_TURBO_SPEED
+            val intervalMillis = turboIntervalMillis(turboSpeed)
+
+            val updatedJob = updateTurboJob(event.pressed, targetKeyCode, intervalMillis, currentTurboJob(event.id))
+            setTurboJob(event.id, updatedJob)
+            return
+        }
+
         val action = if (event.pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
         retroGameView.retroGameView?.sendKeyEvent(action, event.id)
+    }
+
+    private fun currentTurboJob(triggerKeyCode: Int): Job? {
+        return if (triggerKeyCode == KeyEvent.KEYCODE_BUTTON_Y) turboBJob else turboAJob
+    }
+
+    private fun setTurboJob(
+        triggerKeyCode: Int,
+        job: Job?,
+    ) {
+        if (triggerKeyCode == KeyEvent.KEYCODE_BUTTON_Y) {
+            turboBJob = job
+        } else {
+            turboAJob = job
+        }
+    }
+
+    private fun updateTurboJob(
+        pressed: Boolean,
+        targetKeyCode: Int,
+        intervalMillis: Long,
+        existingJob: Job?,
+    ): Job? {
+        existingJob?.cancel()
+
+        if (!pressed) {
+            retroGameView.retroGameView?.sendKeyEvent(KeyEvent.ACTION_UP, targetKeyCode)
+            return null
+        }
+
+        return scope.launch {
+            while (isActive) {
+                retroGameView.retroGameView?.sendKeyEvent(KeyEvent.ACTION_DOWN, targetKeyCode)
+                delay(intervalMillis)
+                retroGameView.retroGameView?.sendKeyEvent(KeyEvent.ACTION_UP, targetKeyCode)
+                delay(intervalMillis)
+            }
+        }
+    }
+
+    private fun turboIntervalMillis(turboSpeed: Float): Long {
+        val slow = TouchControllerSettingsManager.TURBO_INTERVAL_SLOW_MILLIS
+        val fast = TouchControllerSettingsManager.TURBO_INTERVAL_FAST_MILLIS
+        return (slow + (fast - slow) * turboSpeed.coerceIn(0f, 1f)).toLong()
     }
 
     private fun handleVirtualInputDirection(

@@ -1,4 +1,32 @@
-# Lemuroid
+# Changes to this fork:
+### Cheat support for:
+- NES core, ex: [Game Genie format](https://gamegenie.com/cheats/nes/index.html)
+- SNES core, ex: [Game Genie format](https://gamegenie.com/cheats/snes/index.html)
+- GBA core(mGBA), *GameShark / Action Replay: XXXXXXXX XXXXXXXX (two 8-hex groups separated by space). Multiple codes can be chained with +*
+- GBC and GB core(mGBA): *Game Genie (GB): XXX-XXX-XXX (e.g. 01A-23B-4CD) / GameShark: XXXXXXXX (8 hex chars)*
+
+### Added turbo buttons:
+- NES core, Y -> turbo B, Z -> turbo A
+- GBA, GBC and GB core, Y -> turbo B, Z -> turbo A
+
+**Note 1:** turbo slider can be customized with 3 levels:
+1. Slow(0)
+2. Normal(0.5)
+3. Fast(1)
+
+**Note 2:** 
+- Some games have a limit on how fast the turbo can be executed
+- The settings can be found in the **quick game** menu in the **edit commands**[bellow fast forward button] where the buttons and pad size si set
+
+### Globals:
+- Added .ips support for roms(ips patch needs to have the same name as the rom). ex: `game.nes` patch must be `game.ips`. To apply multiple patches just name them like this: `game.1.ips`, `game.2.ips`, etc. Note after adding the patches in the same folder as the rom you must rescan the roms 
+- Added 1x, 2x, 3x and 4x fast forward speed 
+- Ability to export/import saves. **Note**: *when importing on a slot (if a save was overwriten) the screen image will remain until another save is done on that slot.*
+
+### Notes:
+- as i do not have a sign key the app will appear as LemuroidDebug
+
+## Original Lemuroid downloads
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"

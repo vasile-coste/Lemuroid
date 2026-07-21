@@ -5,9 +5,11 @@ import com.swordfish.lemuroid.common.files.readLines
 import com.swordfish.lemuroid.lib.storage.BaseStorageFile
 import com.swordfish.lemuroid.lib.storage.GroupedStorageFiles
 import com.swordfish.lemuroid.lib.storage.StorageProvider
+import com.swordfish.lemuroid.lib.storage.patch.isPatchFile
+import com.swordfish.lemuroid.lib.storage.patch.patchBaseNameAndOrder
 
 object StorageFilesMerger {
-    /** Merge files which belong to the same game. This includes bin/cue files and m3u playlists.*/
+    /** Merge files which belong to the same game. This includes bin/cue files, m3u playlists, and patch files.*/
     fun mergeDataFiles(
         storageProvider: StorageProvider,
         files: List<BaseStorageFile>,
@@ -17,12 +19,34 @@ object StorageFilesMerger {
                 .associateWith { listOf<BaseStorageFile>() }
                 .toMutableMap()
 
+        mergePatchFiles(allFiles)
         mergeBinCueFiles(allFiles, storageProvider)
         removeInvalidBinCuePairs(allFiles, storageProvider)
         mergeM3UPlaylists(allFiles, storageProvider)
         removeInvalidM3UPlaylists(allFiles, storageProvider)
 
         return allFiles.map { GroupedStorageFiles(it.key, it.value) }
+    }
+
+    /**
+     * Merge sidecar patch files into the data files of their matching game. A ROM can have multiple
+     * stacked patches via a numbered suffix: game.ips, game.1.ips, game.2.ips, etc. all match game.nes.
+     */
+    private fun mergePatchFiles(allFiles: MutableMap<BaseStorageFile, List<BaseStorageFile>>) {
+        val patchFiles = allFiles.keys.filter { isPatchFile(it.name) }
+
+        patchFiles.forEach { patchFile ->
+            val (romBaseName, _) = patchBaseNameAndOrder(patchFile.name)
+            val romFile =
+                allFiles.keys.firstOrNull {
+                    it != patchFile && it.extensionlessName == romBaseName
+                }
+
+            if (romFile != null) {
+                allFiles[romFile] = allFiles[romFile]!! + listOf(patchFile)
+                allFiles.remove(patchFile)
+            }
+        }
     }
 
     private fun removeInvalidM3UPlaylists(

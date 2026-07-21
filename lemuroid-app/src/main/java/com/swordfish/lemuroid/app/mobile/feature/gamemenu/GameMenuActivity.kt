@@ -5,6 +5,7 @@ package com.swordfish.lemuroid.app.mobile.feature.gamemenu
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -44,8 +45,13 @@ import androidx.navigation.compose.rememberNavController
 import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.coreoptions.GameMenuCoreOptionsViewModel
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.saves.GameMenuSavesScreen
+import com.swordfish.lemuroid.app.mobile.feature.gamemenu.saves.GameMenuSavesViewModel
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesScreen
 import com.swordfish.lemuroid.app.mobile.feature.gamemenu.states.GameMenuStatesViewModel
+import com.swordfish.lemuroid.lib.cheats.CheatEntry
+import com.swordfish.lemuroid.lib.saves.SaveStatesExporter
+import com.swordfish.lemuroid.lib.saves.SaveStatesImporter
 import com.swordfish.lemuroid.app.mobile.shared.compose.ui.AppTheme
 import com.swordfish.lemuroid.app.shared.GameMenuContract
 import com.swordfish.lemuroid.app.shared.coreoptions.LemuroidCoreOption
@@ -70,6 +76,14 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     @Inject
     lateinit var statesPreviewManager: StatesPreviewManager
 
+    @Inject
+    lateinit var saveStatesExporter: SaveStatesExporter
+
+    @Inject
+    lateinit var saveStatesImporter: SaveStatesImporter
+
+    private var latestCheats: List<CheatEntry> = emptyList()
+
     data class GameMenuRequest(
         val coreOptions: List<LemuroidCoreOption>,
         val advancedCoreOptions: List<LemuroidCoreOption>,
@@ -77,11 +91,13 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         val coreConfig: SystemCoreConfig,
         val audioEnabled: Boolean,
         val fastForwardSupported: Boolean,
-        val fastForwardEnabled: Boolean,
+        val frameSpeed: Int,
         val numDisks: Int,
         val currentDisk: Int,
         val currentTiltConfiguration: TiltConfiguration,
         val allTiltConfigurations: List<TiltConfiguration>,
+        val cheatsSupported: Boolean,
+        val cheats: List<CheatEntry>,
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +109,12 @@ class GameMenuActivity : RetrogradeComponentActivity() {
         )
 
         val extras = intent.extras
+        val legacyFastForwardEnabled = extras?.getBoolean(GameMenuContract.EXTRA_FAST_FORWARD, false) ?: false
+        val frameSpeed =
+            extras?.getInt(
+                GameMenuContract.EXTRA_FRAME_SPEED,
+                if (legacyFastForwardEnabled) 2 else 1,
+            ) ?: 1
 
         val gameMenuRequest =
             GameMenuRequest(
@@ -114,8 +136,7 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     extras?.getBoolean(GameMenuContract.EXTRA_AUDIO_ENABLED, false) ?: false,
                 fastForwardSupported =
                     extras?.getBoolean(GameMenuContract.EXTRA_FAST_FORWARD_SUPPORTED, false) ?: false,
-                fastForwardEnabled =
-                    extras?.getBoolean(GameMenuContract.EXTRA_FAST_FORWARD, false) ?: false,
+                frameSpeed = frameSpeed,
                 numDisks =
                     extras?.getInt(GameMenuContract.EXTRA_DISKS, 0) ?: 0,
                 currentDisk =
@@ -127,7 +148,24 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                     intent.serializable<Array<TiltConfiguration>>(GameMenuContract.EXTRA_TILT_ALL_CONFIGS)
                         ?.toList()
                         ?: emptyList(),
+                cheatsSupported =
+                    extras?.getBoolean(GameMenuContract.EXTRA_CHEATS_SUPPORTED, false) ?: false,
+                cheats =
+                    intent.serializable<ArrayList<CheatEntry>>(GameMenuContract.EXTRA_CHEATS)
+                        ?.toList()
+                        ?: emptyList(),
             )
+
+        latestCheats = gameMenuRequest.cheats
+
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    onResult { }
+                }
+            },
+        )
 
         setContent {
             GameMenuScreen(gameMenuRequest)
@@ -226,6 +264,26 @@ class GameMenuActivity : RetrogradeComponentActivity() {
                             gameMenuRequest,
                         )
                     }
+                    composable(GameMenuRoute.CHEATS) {
+                        GameMenuCheatsScreen(
+                            cheats = gameMenuRequest.cheats,
+                            onCheatsChanged = { latestCheats = it },
+                        )
+                    }
+                    composable(GameMenuRoute.SAVES_MANAGER) {
+                        GameMenuSavesScreen(
+                            viewModel(
+                                factory = GameMenuSavesViewModel.Factory(
+                                    application,
+                                    gameMenuRequest.game,
+                                    gameMenuRequest.coreConfig.coreID,
+                                    saveStatesExporter,
+                                    saveStatesImporter,
+                                ),
+                            ),
+                            gameMenuRequest.game,
+                        )
+                    }
                 }
             }
         }
@@ -260,6 +318,9 @@ class GameMenuActivity : RetrogradeComponentActivity() {
     private fun onResult(block: Intent.() -> Unit) {
         val resultIntent = Intent()
         resultIntent.block()
+        if (latestCheats.isNotEmpty() || intent.extras?.getBoolean(GameMenuContract.EXTRA_CHEATS_SUPPORTED, false) == true) {
+            resultIntent.putExtra(GameMenuContract.RESULT_CHEATS, ArrayList(latestCheats))
+        }
         setResult(RESULT_OK, resultIntent)
         finish()
     }

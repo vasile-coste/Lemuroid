@@ -7,6 +7,7 @@ import android.system.Os
 import android.text.format.Formatter
 import com.swordfish.lemuroid.common.kotlin.gigaBytes
 import com.swordfish.lemuroid.common.kotlin.megaBytes
+import com.swordfish.lemuroid.lib.storage.local.GameCacheUtils
 import com.swordfish.lemuroid.lib.storage.local.LocalStorageProvider
 import com.swordfish.lemuroid.lib.storage.local.StorageAccessFrameworkProvider
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +61,7 @@ object CacheCleaner {
                 sequenceOf(
                     File(appContext.cacheDir, StorageAccessFrameworkProvider.SAF_CACHE_SUBFOLDER).walkBottomUp(),
                     File(appContext.cacheDir, LocalStorageProvider.LOCAL_STORAGE_CACHE_SUBFOLDER).walkBottomUp(),
+                    File(appContext.cacheDir, GameCacheUtils.PATCHED_ROM_CACHE_SUBFOLDER).walkBottomUp(),
                 )
 
             val cacheFiles =
