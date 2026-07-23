@@ -17,6 +17,7 @@ import com.swordfish.lemuroid.R
 import com.swordfish.lemuroid.app.utils.android.settings.LemuroidCardSettingsGroup
 import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsList
 import com.swordfish.lemuroid.app.utils.android.settings.LemuroidSettingsPage
+import com.swordfish.lemuroid.lib.library.CoreID
 
 @Composable
 fun CoresSelectionScreen(
@@ -30,21 +31,23 @@ fun CoresSelectionScreen(
     val indexingInProgress = viewModel.indexingInProgress.collectAsState(false).value
 
     LemuroidSettingsPage(modifier = modifier.fillMaxWidth()) {
-        ElevatedCard(
-            colors =
-                CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                ),
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp),
-        ) {
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = stringResource(R.string.settings_core_selection_ds_info),
-                style = MaterialTheme.typography.bodyMedium,
-            )
+        if (cores.any { it.coreConfig.coreID == CoreID.DESMUME }) {
+            ElevatedCard(
+                colors =
+                    CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
+            ) {
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = stringResource(R.string.settings_core_selection_ds_info),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
         LemuroidCardSettingsGroup {
             cores.forEach { (system, core) ->
@@ -54,7 +57,7 @@ fun CoresSelectionScreen(
                     state = state,
                     title = { Text(text = stringResource(system.titleResId)) },
                     items = system.systemCoreConfigs.map { it.coreID.coreDisplayName },
-                    enabled = !indexingInProgress,
+                    enabled = !indexingInProgress && system.systemCoreConfigs.size > 1,
                     onItemSelected = { index, _ ->
                         viewModel.changeCore(system, system.systemCoreConfigs[index], applicationContext)
                     },

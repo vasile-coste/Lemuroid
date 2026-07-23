@@ -48,13 +48,33 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         return metadata
     }
 
-    private fun convertToGameMetadata(rom: LibretroRom): GameMetadata {
-        val system = GameSystem.findById(rom.system!!)
+    private fun convertToGameMetadata(
+        rom: LibretroRom,
+        file: StorageFile,
+    ): GameMetadata {
+        val dbSystem = GameSystem.findById(rom.system!!)
+
+        // The bundled metadata database occasionally files a ROM under the wrong (but related)
+        // system, e.g. a proto/hack distributed with a .gbc extension catalogued as plain "gb".
+        // When the file's own extension unambiguously identifies a different system, trust the
+        // extension over the database's system field, since it can't be misleading like a CRC
+        // collision or a mislabeled database row can.
+        val extensionSystem = GameSystem.findByUniqueFileExtension(file.extension)
+        val system =
+            if (extensionSystem != null &&
+                extensionSystem.scanOptions.scanByUniqueExtension &&
+                extensionSystem.id != dbSystem.id
+            ) {
+                extensionSystem
+            } else {
+                dbSystem
+            }
+
         return GameMetadata(
             name = rom.name,
             romName = rom.romName,
             thumbnail = computeCoverUrl(system, rom.name),
-            system = rom.system,
+            system = system.id.dbname,
             developer = rom.developer,
         )
     }
@@ -65,7 +85,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     ): GameMetadata? {
         return db.gameDao().findByFileName(file.name)
             .filterNullable { extractGameSystem(it).scanOptions.scanByFilename }
-            ?.let { convertToGameMetadata(it) }
+            ?.let { convertToGameMetadata(it, file) }
     }
 
     private suspend fun findByPathAndFilename(
@@ -75,7 +95,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
         return db.gameDao().findByFileName(file.name)
             .filterNullable { extractGameSystem(it).scanOptions.scanByPathAndFilename }
             .filterNullable { parentContainsSystem(file.path, extractGameSystem(it).id.dbname) }
-            ?.let { convertToGameMetadata(it) }
+            ?.let { convertToGameMetadata(it, file) }
     }
 
     private fun findByPathAndSupportedExtension(file: StorageFile): GameMetadata? {
@@ -110,7 +130,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     ): GameMetadata? {
         if (file.crc == null || file.crc == "0") return null
         return file.crc?.let { crc32 -> db.gameDao().findByCRC(crc32) }
-            ?.let { convertToGameMetadata(it) }
+            ?.let { convertToGameMetadata(it, file) }
     }
 
     private suspend fun findBySerial(
@@ -119,7 +139,7 @@ class LibretroDBMetadataProvider(private val ovgdbManager: LibretroDBManager) :
     ): GameMetadata? {
         if (file.serial == null) return null
         return db.gameDao().findBySerial(file.serial!!)
-            ?.let { convertToGameMetadata(it) }
+            ?.let { convertToGameMetadata(it, file) }
     }
 
     private fun findByKnownSystem(file: StorageFile): GameMetadata? {

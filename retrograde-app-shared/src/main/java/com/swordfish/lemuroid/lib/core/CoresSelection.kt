@@ -33,9 +33,7 @@ class CoresSelection(
     )
 
     fun getSelectedCores(): Flow<List<SelectedCore>> {
-        val configurableSystems =
-            GameSystem.all()
-                .filter { it.systemCoreConfigs.size > 1 }
+        val configurableSystems = GameSystem.all()
 
         val configurationFlows =
             configurableSystems.map { system ->

@@ -35,6 +35,7 @@ import com.swordfish.lemuroid.lib.cheats.CheatsManager
 import com.swordfish.lemuroid.lib.core.CoreVariablesManager
 import com.swordfish.lemuroid.lib.game.GameLoader
 import com.swordfish.libretrodroid.LibretroDroid
+import com.swordfish.lemuroid.lib.library.CoreID
 import com.swordfish.lemuroid.lib.library.ExposedSetting
 import com.swordfish.lemuroid.lib.library.GameSystem
 import com.swordfish.lemuroid.lib.library.SystemCoreConfig
@@ -57,6 +58,18 @@ abstract class BaseGameActivity : ImmersiveActivity() {
     protected lateinit var game: Game
     private lateinit var system: GameSystem
     protected lateinit var systemCoreConfig: SystemCoreConfig
+
+    // Nintendo 3DS cheats only work with the AzaharPlus core (Citra's retro_cheat_set/reset are
+    // no-op stubs), so that system is gated on the currently selected core, unlike the others
+    // which only ever have one cheat-capable core selectable.
+    private val cheatsSupported: Boolean
+        get() =
+            system.id == SystemID.SNES ||
+                system.id == SystemID.NES ||
+                system.id == SystemID.GBA ||
+                system.id == SystemID.GB ||
+                system.id == SystemID.GBC ||
+                (system.id == SystemID.NINTENDO_3DS && systemCoreConfig.coreID == CoreID.AZAHARPLUS)
 
     @Inject
     lateinit var settingsManager: SettingsManager
@@ -144,7 +157,7 @@ abstract class BaseGameActivity : ImmersiveActivity() {
             )
         }
 
-        if (system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC) {
+        if (cheatsSupported) {
             lifecycleScope.launch {
                 baseGameScreenViewModel.retroGameView.retroGameViewFlow()
                 val savedCheats = cheatsManager.loadGameCheats(game.id)
@@ -236,8 +249,8 @@ abstract class BaseGameActivity : ImmersiveActivity() {
                 this.putExtra(GameMenuContract.EXTRA_CURRENT_TILT_CONFIG, currentTiltConfiguration)
                 // TODO PADS... Make sure to avoid passing this if a physical pad is connected.
                 this.putExtra(GameMenuContract.EXTRA_TILT_ALL_CONFIGS, tiltConfigurations.toTypedArray())
-                this.putExtra(GameMenuContract.EXTRA_CHEATS_SUPPORTED, system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC)
-                if (system.id == SystemID.SNES || system.id == SystemID.NES || system.id == SystemID.GBA || system.id == SystemID.GB || system.id == SystemID.GBC) {
+                this.putExtra(GameMenuContract.EXTRA_CHEATS_SUPPORTED, cheatsSupported)
+                if (cheatsSupported) {
                     this.putExtra(
                         GameMenuContract.EXTRA_CHEATS,
                         ArrayList(cheatsManager.loadGameCheats(game.id)),

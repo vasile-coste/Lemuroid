@@ -4,6 +4,7 @@
 - SNES core, ex: [Game Genie format](https://gamegenie.com/cheats/snes/index.html)
 - GBA core(mGBA), *GameShark / Action Replay: XXXXXXXX XXXXXXXX (two 8-hex groups separated by space). Multiple codes can be chained with +*
 - GBC and GB core(mGBA): *Game Genie (GB): XXX-XXX-XXX (e.g. 01A-23B-4CD) / GameShark: XXXXXXXX (8 hex chars)*
+- 3DS for AzaharPlus core, the format is XXXX XXXX, you can find them [here](https://github.com/JourneyOver/CTRPF-AR-CHEAT-CODES/tree/master/Cheats)
 
 ### Added turbo buttons:
 - NES core, Y -> turbo B, Z -> turbo A
@@ -18,15 +19,39 @@
 - Some games have a limit on how fast the turbo can be executed
 - The settings can be found in the **quick game** menu in the **edit commands**[bellow fast forward button] where the buttons and pad size si set
 
+
+### Core Updates:
+1. added [AzaharPlus](https://github.com/AzaharPlus/AzaharPlus) as offers event more features for 3DS roms(cheats, save state, etc). Default is still citra. Note as the save is not compatible with citra.
+
+Below are the minimum requirements to run AzaharPlus:
+```
+Operating System: Android 9.0+ (64-bit)
+CPU: Snapdragon 835 SoC or better
+GPU: OpenGL ES 3.2 or Vulkan 1.1 support
+Memory: 2GB of RAM. 4GB is recommended
+```
+Tested on Samsung S25
+
+
 ### Globals:
 - Added .ips support for roms(ips patch needs to have the same name as the rom). ex: `game.nes` patch must be `game.ips`. To apply multiple patches just name them like this: `game.1.ips`, `game.2.ips`, etc. Note after adding the patches in the same folder as the rom you must rescan the roms 
 - Added 1x, 2x, 3x and 4x fast forward speed 
 - Ability to export/import saves. **Note**: *when importing on a slot (if a save was overwriten) the screen image will remain until another save is done on that slot.*
+- fixed a Lemuroid bug where some **GBC** roms were mapped as **GB** roms
 
 ### Notes:
 - as i do not have a sign key the app will appear as LemuroidDebug
 
-## Original Lemuroid downloads
+### Build the project instructions:
+[Build info](/BUILD.md)
+
+
+### Create/Add Cores instructions:
+[Cores info](/CORE_CREATION.md)
+
+<details>
+
+<summary>Original Lemuroid documentation</summary>
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -87,3 +112,5 @@ It originated from a rib of [Retrograde](https://github.com/retrograde/retrograd
 
 ### Languages:
 You can help translate Lemuroid in your native language by going here: https://crowdin.com/project/lemuroid
+
+</details>

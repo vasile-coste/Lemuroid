@@ -20,6 +20,7 @@
 package com.swordfish.lemuroid.lib.library
 
 import com.swordfish.lemuroid.common.coroutines.batchWithSizeAndTime
+import com.swordfish.lemuroid.common.files.FileUtils
 import com.swordfish.lemuroid.lib.bios.BiosManager
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.DataFile
@@ -135,12 +136,33 @@ class LemuroidLibrary(
     ) {
         val updatedGames =
             entries
-                .map { it.game.copy(lastIndexedAt = startedAtMs) }
+                .map {
+                    it.game.copy(
+                        lastIndexedAt = startedAtMs,
+                        systemId = correctedSystemId(it.game),
+                    )
+                }
 
         updatedGames
             .forEach { Timber.d("Updating game: $it") }
 
         retrogradedb.gameDao().update(updatedGames)
+    }
+
+    // A previous scan may have stored a systemId that disagrees with what the game's own
+    // filename extension unambiguously implies (e.g. a metadata database mismatch). Since
+    // uniqueExtensions map exactly one extension to one system by construction, any such
+    // disagreement is always a stale/incorrect systemId, so every rescan self-heals it here
+    // rather than only fixing newly-discovered files going forward.
+    private fun correctedSystemId(game: Game): String {
+        val extensionSystem =
+            GameSystem.findByUniqueFileExtension(FileUtils.extractExtension(game.fileName))
+
+        return if (extensionSystem != null && extensionSystem.scanOptions.scanByUniqueExtension) {
+            extensionSystem.id.dbname
+        } else {
+            game.systemId
+        }
     }
 
     private fun updateDataFiles(
