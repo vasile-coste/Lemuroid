@@ -280,6 +280,11 @@ class StorageAccessFrameworkProvider(private val context: Context) : StorageProv
         return context.contentResolver.openInputStream(uri)
     }
 
+    override fun deleteGameFile(game: Game): Boolean {
+        val documentUri = Uri.parse(game.fileUri)
+        return DocumentFile.fromSingleUri(context, documentUri)?.delete() ?: false
+    }
+
     companion object {
         const val SAF_CACHE_SUBFOLDER = "storage-framework-games"
         const val VIRTUAL_FILE_PATH = "/virtual/file/path"

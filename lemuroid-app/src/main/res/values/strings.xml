@@ -96,6 +96,12 @@
     <string name="game_context_menu_resume">Resume</string>
     <string name="game_context_menu_restart">Restart</string>
     <string name="game_context_menu_create_shortcut">Pin to launcher</string>
+    <string name="game_context_menu_delete">Delete</string>
+
+    <string name="game_delete_confirm_title">Delete %1$s?</string>
+    <string name="game_delete_confirm_message">This will permanently delete the ROM file from your device/phone. This action cannot be undone.</string>
+    <string name="game_delete_success">%1$s deleted</string>
+    <string name="game_delete_error">Unable to delete %1$s</string>
 
     <string name="home_notification_title">Enable notifications</string>
     <string name="home_notification_message">Lemuroid uses notifications to let you know when a game or operation is running in background.</string>

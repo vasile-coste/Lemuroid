@@ -20,10 +20,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AppShortcut
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,10 +34,13 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -55,6 +60,7 @@ fun MainGameContextActions(
     onGameRestart: (Game) -> Unit,
     onFavoriteToggle: (Game, Boolean) -> Unit,
     onCreateShortcut: (Game) -> Unit,
+    onGameDelete: (Game) -> Unit,
 ) {
     val modalSheetState = rememberModalBottomSheetState(true)
     val selectedGame = selectedGameState.value
@@ -80,6 +86,7 @@ fun MainGameContextActions(
                 onFavoriteToggle = onFavoriteToggle,
                 shortcutSupported = shortcutSupported,
                 onCreateShortcut = onCreateShortcut,
+                onGameDelete = onGameDelete,
             )
         }
     }
@@ -94,7 +101,10 @@ private fun ContextActionContent(
     onFavoriteToggle: (Game, Boolean) -> Unit,
     shortcutSupported: Boolean,
     onCreateShortcut: (Game) -> Unit,
+    onGameDelete: (Game) -> Unit,
 ) {
+    val deleteConfirmationVisible = remember { mutableStateOf(false) }
+
     Column(
         modifier =
             Modifier
@@ -150,7 +160,48 @@ private fun ContextActionContent(
                 },
             )
         }
+
+        ContextActionEntry(
+            label = stringResource(id = R.string.game_context_menu_delete),
+            icon = Icons.Default.Delete,
+            onClick = { deleteConfirmationVisible.value = true },
+        )
     }
+
+    if (deleteConfirmationVisible.value) {
+        DeleteConfirmationDialog(
+            game = selectedGame,
+            onConfirm = {
+                deleteConfirmationVisible.value = false
+                onGameDelete(selectedGame)
+                selectedGameState.value = null
+            },
+            onDismiss = { deleteConfirmationVisible.value = false },
+        )
+    }
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    game: Game,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        title = { Text(stringResource(id = R.string.game_delete_confirm_title, game.title)) },
+        text = { Text(stringResource(id = R.string.game_delete_confirm_message)) },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable

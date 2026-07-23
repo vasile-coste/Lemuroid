@@ -1,5 +1,6 @@
 package com.swordfish.lemuroid.app.shared
 
+import android.app.AlertDialog
 import android.view.ContextMenu
 import android.view.View
 import com.swordfish.lemuroid.R
@@ -41,6 +42,16 @@ class GameContextMenuListener(
                 gameInteractor.onCreateShortcut(game)
                 true
             }
+        }
+
+        menu.add(R.string.game_context_menu_delete).setOnMenuItemClickListener {
+            AlertDialog.Builder(v.context)
+                .setTitle(v.context.getString(R.string.game_delete_confirm_title, game.title))
+                .setMessage(R.string.game_delete_confirm_message)
+                .setPositiveButton(R.string.ok) { _, _ -> gameInteractor.onGameDelete(game) }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+            true
         }
     }
 }

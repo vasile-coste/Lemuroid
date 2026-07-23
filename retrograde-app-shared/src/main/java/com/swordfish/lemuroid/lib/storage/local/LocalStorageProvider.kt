@@ -151,6 +151,11 @@ class LocalStorageProvider(
         return File(uri.path).inputStream()
     }
 
+    override fun deleteGameFile(game: Game): Boolean {
+        val gamePath = Uri.parse(game.fileUri).path
+        return File(gamePath).delete()
+    }
+
     companion object {
         const val LOCAL_STORAGE_CACHE_SUBFOLDER = "local-storage-games"
     }

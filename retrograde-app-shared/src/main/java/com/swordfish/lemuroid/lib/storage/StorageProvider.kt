@@ -48,4 +48,6 @@ interface StorageProvider {
         dataFiles: List<DataFile>,
         allowVirtualFiles: Boolean,
     ): RomFiles
+
+    fun deleteGameFile(game: Game): Boolean
 }

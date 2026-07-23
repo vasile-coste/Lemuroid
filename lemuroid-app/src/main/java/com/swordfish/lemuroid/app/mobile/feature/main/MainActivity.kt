@@ -70,6 +70,7 @@ import com.swordfish.lemuroid.lib.library.db.entity.Game
 import com.swordfish.lemuroid.lib.preferences.SharedPreferencesHelper
 import com.swordfish.lemuroid.lib.savesync.SaveSyncManager
 import com.swordfish.lemuroid.lib.storage.DirectoriesManager
+import com.swordfish.lemuroid.lib.storage.StorageProviderRegistry
 import dagger.Provides
 import de.charlex.compose.material3.HtmlText
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -355,6 +356,7 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                     gameInteractor.onFavoriteToggle(game, isFavorite)
                 },
                 onCreateShortcut = { gameInteractor.onCreateShortcut(it) },
+                onGameDelete = { gameInteractor.onGameDelete(it) },
             )
 
             if (infoDialogDisplayed.value) {
@@ -422,7 +424,8 @@ class MainActivity : RetrogradeComponentActivity(), BusyActivity {
                 retrogradeDb: RetrogradeDatabase,
                 shortcutsGenerator: ShortcutsGenerator,
                 gameLauncher: GameLauncher,
-            ) = GameInteractor(activity, retrogradeDb, false, shortcutsGenerator, gameLauncher)
+                storageProviderRegistry: StorageProviderRegistry,
+            ) = GameInteractor(activity, retrogradeDb, false, shortcutsGenerator, gameLauncher, storageProviderRegistry)
         }
     }
 }

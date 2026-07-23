@@ -11,8 +11,11 @@ import com.swordfish.lemuroid.app.shared.main.BusyActivity
 import com.swordfish.lemuroid.common.displayToast
 import com.swordfish.lemuroid.lib.library.db.RetrogradeDatabase
 import com.swordfish.lemuroid.lib.library.db.entity.Game
+import com.swordfish.lemuroid.lib.storage.StorageProviderRegistry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class GameInteractor(
     private val activity: BusyActivity,
@@ -20,6 +23,7 @@ class GameInteractor(
     private val useLeanback: Boolean,
     private val shortcutsGenerator: ShortcutsGenerator,
     private val gameLauncher: GameLauncher,
+    private val storageProviderRegistry: StorageProviderRegistry,
 ) {
     fun onGamePlay(game: Game) {
         if (!ensureNotBusy()) {
@@ -53,6 +57,23 @@ class GameInteractor(
     fun onCreateShortcut(game: Game) {
         GlobalScope.launch {
             shortcutsGenerator.pinShortcutForGame(game)
+        }
+    }
+
+    fun onGameDelete(game: Game) {
+        GlobalScope.launch {
+            val fileDeleted = storageProviderRegistry.getProvider(game).deleteGameFile(game)
+            retrogradeDb.gameDao().delete(listOf(game))
+
+            withContext(Dispatchers.Main) {
+                val messageRes =
+                    if (fileDeleted) {
+                        R.string.game_delete_success
+                    } else {
+                        R.string.game_delete_error
+                    }
+                activity.activity().displayToast(activity.activity().getString(messageRes, game.title))
+            }
         }
     }
 
