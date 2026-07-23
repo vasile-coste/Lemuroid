@@ -397,3 +397,24 @@ check whether it reports a "convenience" native rate expecting the frontend to r
 via `retro_get_system_av_info`'s `timing.sample_rate` (or the equivalent core-specific setter) and
 compare against what a normal audio device rate looks like (8kHz-192kHz range) before assuming a
 direct crash means the *frontend* is broken.
+
+# Updating the cores in build
+Quick one-liner (since .gitmodules already pins the submodule to branch = master):
+
+git submodule update --remote --merge lemuroid-cores
+git add lemuroid-cores
+git commit -m "Bump lemuroid-cores submodule to latest"
+git push
+
+
+Manual/inspect-first (what we did earlier when I found the AzaharPlus core was missing):
+
+cd lemuroid-cores
+git fetch origin
+git log HEAD..origin/master --oneline   # see what's new before taking it
+git checkout origin/master              # or: git merge origin/master
+cd ..
+git status                                # confirms "lemuroid-cores (new commits)"
+git add lemuroid-cores
+git commit -m "Bump lemuroid-cores submodule to include <whatever changed>"
+git push
