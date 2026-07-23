@@ -37,6 +37,8 @@
     <string name="setting_mgba_interframe_blending">LCD ghosting</string>
     <string name="setting_mgba_frameskip">Frameskip</string>
     <string name="setting_mgba_color_correction">Color correction</string>
+    <string name="setting_mgba_sgb_borders">Super Game Boy borders</string>
+    <string name="setting_mgba_gb_colors_preset">Hardware preset palettes</string>
     <string name="setting_mupen64plus_43screensize">Screen size 4:3</string>
     <string name="setting_mupen64plus_cpucore">Dynamic recompiler</string>
     <string name="setting_mupen64plus_BilinearMode">Bilinear mode</string>
@@ -85,6 +87,11 @@
 
     <string name="value_mgba_color_correction_off">Disabled</string>
     <string name="value_mgba_color_correction_gba">Enabled</string>
+
+    <string name="value_mgba_gb_colors_preset_default">Default Game Boy preset</string>
+    <string name="value_mgba_gb_colors_preset_gbc">Game Boy Color presets only</string>
+    <string name="value_mgba_gb_colors_preset_sgb">Super Game Boy presets only</string>
+    <string name="value_mgba_gb_colors_preset_any">Any available presets</string>
 
     <string name="value_stella_filter_disabled">Disabled</string>
     <string name="value_stella_filter_composite">Composite</string>
