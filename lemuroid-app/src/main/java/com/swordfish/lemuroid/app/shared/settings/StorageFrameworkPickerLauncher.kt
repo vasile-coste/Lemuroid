@@ -24,6 +24,7 @@ class StorageFrameworkPickerLauncher : RetrogradeActivity() {
             val intent =
                 Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     this.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    this.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     this.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                     this.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
                     this.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
@@ -77,11 +78,14 @@ class StorageFrameworkPickerLauncher : RetrogradeActivity() {
             .forEach {
                 contentResolver.releasePersistableUriPermission(
                     it.uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                 )
             }
 
-        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        contentResolver.takePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+        )
     }
 
     private fun startLibraryIndexWork() {
