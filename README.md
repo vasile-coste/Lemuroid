@@ -32,6 +32,8 @@ Memory: 2GB of RAM. 4GB is recommended
 ```
 Tested on Samsung S25
 
+Note: 3DS Citra and AzaharPlus only work with arm64-v8a
+
 
 ### Globals:
 - Added .ips support for roms(ips patch needs to have the same name as the rom). ex: `game.nes` patch must be `game.ips`. To apply multiple patches just name them like this: `game.1.ips`, `game.2.ips`, etc. Note after adding the patches in the same folder as the rom you must rescan the roms 
@@ -47,8 +49,8 @@ Tested on Samsung S25
 [Build info](/BUILD.md)
 
 
-### Create/Add Cores instructions:
-[Cores info](/CORE_CREATION.md)
+### Update Cores instructions:
+[Cores update](/CORE_UPDATE.md)
 
 <details>
 
