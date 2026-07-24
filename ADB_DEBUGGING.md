@@ -94,7 +94,7 @@ emit a lot of unrelated `StrictMode`/`EDMProxy` noise.
 
 ## Inspecting the app's Room database
 Debug builds are `run-as`-able, so you can read their private storage without root:
-```
+```bash
 adb shell run-as com.swordfish.lemuroid.debug ls databases/
 adb exec-out run-as com.swordfish.lemuroid.debug cat databases/retrograde > /tmp/retrograde.db
 sqlite3 /tmp/retrograde.db "SELECT id, fileName, fileUri FROM games LIMIT 5;"
@@ -110,13 +110,13 @@ permission granted." When in doubt, reproduce the actual behavior on-device inst
 file delete/write actually succeed) rather than relying on this dump.
 
 ## Uninstalling (e.g. to test a truly clean install)
-```
+```bash
 adb uninstall com.swordfish.lemuroid.debug
 ```
 This wipes the app's data, including any persisted SAF folder permission — you'll need to
 re-run the ROMs folder picker afterward.
 
 ## Screenshots
-```
+```bash
 adb exec-out screencap -p > /tmp/screen.png
 ```

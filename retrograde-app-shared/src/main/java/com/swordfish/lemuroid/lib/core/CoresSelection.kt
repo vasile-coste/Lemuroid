@@ -60,7 +60,8 @@ class CoresSelection(
     private fun getSelectedCoreConfigForSystem(system: GameSystem): Flow<SystemCoreConfig> {
         return getSelectedCoreNameForSystem(system)
             .map { coreName ->
-                system.systemCoreConfigs.first { it.coreID.coreName == coreName }
+                system.systemCoreConfigs.firstOrNull { it.coreID.coreName == coreName }
+                    ?: system.systemCoreConfigs.first()
             }
     }
 

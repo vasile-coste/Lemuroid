@@ -1,7 +1,7 @@
 # Changes to this fork:
 
 ### Notes on adding alternative cores 
-I've tried to add libreto SameBoy for GB and GBC, but there was a mismatch in the way Lemuiroid interprets the sound, this was causing the roms to crash randomly. It is really tricky even trought they work fine in RetroArch.
+I've tried to add libreto SameBoy/mGBA for GB and GBC, but there was a mismatch in the way Lemuiroid interprets the sound, this was causing the roms to crash randomly. It is really tricky even trought they work fine in RetroArch.
 
 But do not worry, i've build a tutorial on how i did it with AzaharPlus [here](https://github.com/vasile-coste/LemuroidCores/blob/master/CORE_CREATION_EXAMPLE.md). So feel free to experiment!
 

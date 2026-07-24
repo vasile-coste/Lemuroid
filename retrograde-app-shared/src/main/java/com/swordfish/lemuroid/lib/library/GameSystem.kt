@@ -498,68 +498,6 @@ data class GameSystem(
                                     0 to arrayListOf(ControllerConfigs.GB),
                                 ),
                         ),
-                        SystemCoreConfig(
-                            CoreID.MGBA,
-                            exposedSettings =
-                                listOf(
-                                    ExposedSetting(
-                                        "mgba_gb_colors_preset",
-                                        R.string.setting_mgba_gb_colors_preset,
-                                        arrayListOf(
-                                            ExposedSetting.Value(
-                                                "0",
-                                                R.string.value_mgba_gb_colors_preset_default,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "1",
-                                                R.string.value_mgba_gb_colors_preset_gbc,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "2",
-                                                R.string.value_mgba_gb_colors_preset_sgb,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "3",
-                                                R.string.value_mgba_gb_colors_preset_any,
-                                            ),
-                                        ),
-                                    ),
-                                    ExposedSetting(
-                                        "mgba_sgb_borders",
-                                        R.string.setting_mgba_sgb_borders,
-                                    ),
-                                    ExposedSetting(
-                                        "mgba_interframe_blending",
-                                        R.string.setting_mgba_interframe_blending,
-                                        arrayListOf(
-                                            ExposedSetting.Value(
-                                                "OFF",
-                                                R.string.value_mgba_interframe_blending_off,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "mix",
-                                                R.string.value_mgba_interframe_blending_mix,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "lcd_ghosting",
-                                                R.string.value_mgba_interframe_blending_lcd_ghosting,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "lcd_ghosting_fast",
-                                                R.string.value_mgba_interframe_blending_lcd_ghosting_fast,
-                                            ),
-                                        ),
-                                    ),
-                                ),
-                            defaultSettings =
-                                listOf(
-                                    CoreVariable("mgba_gb_model", "Game Boy"),
-                                ),
-                            controllerConfigs =
-                                hashMapOf(
-                                    0 to arrayListOf(ControllerConfigs.GB),
-                                ),
-                        ),
                     ),
                     uniqueExtensions = listOf("gb"),
                 ),
@@ -618,47 +556,6 @@ data class GameSystem(
                             defaultSettings =
                                 listOf(
                                     CoreVariable("gambatte_gbc_color_correction", "disabled"),
-                                ),
-                            controllerConfigs =
-                                hashMapOf(
-                                    0 to arrayListOf(ControllerConfigs.GB),
-                                ),
-                        ),
-                        SystemCoreConfig(
-                            CoreID.MGBA,
-                            exposedSettings =
-                                listOf(
-                                    ExposedSetting(
-                                        "mgba_sgb_borders",
-                                        R.string.setting_mgba_sgb_borders,
-                                    ),
-                                    ExposedSetting(
-                                        "mgba_interframe_blending",
-                                        R.string.setting_mgba_interframe_blending,
-                                        arrayListOf(
-                                            ExposedSetting.Value(
-                                                "OFF",
-                                                R.string.value_mgba_interframe_blending_off,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "mix",
-                                                R.string.value_mgba_interframe_blending_mix,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "lcd_ghosting",
-                                                R.string.value_mgba_interframe_blending_lcd_ghosting,
-                                            ),
-                                            ExposedSetting.Value(
-                                                "lcd_ghosting_fast",
-                                                R.string.value_mgba_interframe_blending_lcd_ghosting_fast,
-                                            ),
-                                        ),
-                                    ),
-                                ),
-                            rumbleSupported = true,
-                            defaultSettings =
-                                listOf(
-                                    CoreVariable("mgba_gb_model", "Game Boy Color"),
                                 ),
                             controllerConfigs =
                                 hashMapOf(
