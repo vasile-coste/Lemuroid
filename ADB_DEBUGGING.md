@@ -10,7 +10,7 @@ Settings → Developer options → **Wireless debugging** → toggle on.
 With the Wireless debugging screen open on the phone (it only broadcasts while that screen is
 visible, or briefly after toggling on), run:
 
-```
+```bash
 adb mdns services
 ```
 
@@ -18,7 +18,7 @@ This lists mDNS services the phone is advertising, e.g.:
 
 ```
 adb-RFGYB33VD9E-31VH0R	_adb-tls-pairing._tcp	192.168.3.30:41235
-adb-RFGYB33VD9E-31VH0R	_adb-tls-connect._tcp	192.168.3.30:37325
+adb-RFGYB33VD9E-31VH0R	_adb-tls-connect._tcp	192.168.3.30:43371
 ```
 
 - `_adb-tls-pairing._tcp` — only present, and only needed, the **first time** you connect from a
@@ -38,7 +38,7 @@ session.
    ```
 
 ## 4. Connect (every session)
-```
+```bash
 adb connect <connect-ip>:<connect-port>
 ```
 using the address from `_adb-tls-connect._tcp`. Verify with:
@@ -47,7 +47,7 @@ adb devices -l
 ```
 
 If multiple devices/emulators are attached, target this one explicitly in every command below with
-`-s <ip>:<port>`, e.g. `adb -s 192.168.3.30:37325 install app.apk`.
+`-s <ip>:<port>`, e.g. `adb -s 192.168.3.30:43371 install app.apk`.
 
 ---
 
@@ -58,7 +58,7 @@ The debug build's application ID is `com.swordfish.lemuroid.debug` (the release/
 accordingly below.
 
 ## Installing a freshly built APK
-```
+```bash
 ./gradlew :lemuroid-app:assembleFreeBundleDebug
 adb install -r lemuroid-app/build/outputs/apk/freeBundle/debug/lemuroid-app-free-bundle-debug.apk
 ```
@@ -66,16 +66,26 @@ adb install -r lemuroid-app/build/outputs/apk/freeBundle/debug/lemuroid-app-free
 what you want when iterating.
 
 ## Confirming the app is installed
-```
+```bash
 adb shell pm list packages | grep -i lemuroid
+```
+for multiple devices just use
+```bash
+adb -s 192.168.3.30:43371 shell pm list packages | grep -i lemuroid
 ```
 
 ## Watching logs while reproducing a bug
 Clear old logs first so you're only looking at fresh output, then filter to the app's process:
-```
+```bash
 adb logcat -c
 # ... reproduce the bug on the phone ...
-adb logcat -d --pid=$(adb shell pidof com.swordfish.lemuroid.debug) > /tmp/lemuroid.log
+adb logcat -d --pid=$(adb shell pidof com.swordfish.lemuroid.debug) > lemuroid.log
+```
+or for multiple devices
+```bash
+adb -s 192.168.3.30:43371 logcat -c
+# ... reproduce the bug on the phone ...
+adb -s 192.168.3.30:43371 logcat -d --pid=$(adb -s 192.168.3.30:43371 shell pidof com.swordfish.lemuroid.debug) > lemuroid.log
 ```
 `-d` dumps the current buffer and exits instead of streaming, which is usually what you want when
 capturing a single repro. Search the dump for `Timber`/your tag, `Exception`, or the specific class

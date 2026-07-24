@@ -1417,11 +1417,11 @@ data class GameSystem(
                                         R.string.setting_citra_layout_option,
                                         arrayListOf(
                                             ExposedSetting.Value(
-                                                "Default Top-Bottom Screen",
+                                                "default",
                                                 R.string.value_citra_layout_option_topbottom,
                                             ),
                                             ExposedSetting.Value(
-                                                "Side by Side",
+                                                "side_by_side",
                                                 R.string.value_citra_layout_option_sidebyside,
                                             ),
                                         ),
@@ -1431,12 +1431,8 @@ data class GameSystem(
                                         R.string.setting_citra_resolution_factor,
                                     ),
                                     ExposedSetting(
-                                        "citra_use_acc_mul",
+                                        "citra_shaders_accurate_mul",
                                         R.string.setting_citra_use_acc_mul,
-                                    ),
-                                    ExposedSetting(
-                                        "citra_use_acc_geo_shaders",
-                                        R.string.setting_citra_use_acc_geo_shaders,
                                     ),
                                 ),
                             statesSupported = true,
